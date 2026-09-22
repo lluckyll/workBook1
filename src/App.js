@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
-import { Plus, Trash2, X, BookOpen, Calendar, TrendingUp, ChevronRight, ScanBarcode, User } from "lucide-react";
+import { Plus, Trash2, X, BookOpen, Calendar, TrendingUp, ChevronRight, ScanBarcode, User, Pencil } from "lucide-react";
 
 const SUBJECT_COLORS = [
   { bg: "#F4E4E1", border: "#D4816F", text: "#8A4030", dot: "#D4816F" },
@@ -35,6 +35,21 @@ export default function App() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBook, setNewBook] = useState({ title: "", subject: "", publisher: "", totalUnits: "", unitLabel: "쪽" });
   const [logInput, setLogInput] = useState({ date: todayStr(), amount: "", note: "" });
+  
+  const [editingBook, setEditingBook] = useState(false);
+  const [editForm, setEditForm] = useState({ title: "", subject: "", publisher: "", totalUnits: "", unitLabel: "쪽" });
+
+  function saveEdit() {
+    if (!selectedBook || !editForm.title.trim() || !editForm.totalUnits || Number(editForm.totalUnits) <= 0) return;
+    setBooks((prev) =>
+      prev.map((b) =>
+        b.id === selectedBook.id
+          ? { ...b, title: editForm.title.trim(), subject: editForm.subject.trim() || "기타", publisher: editForm.publisher.trim(), totalUnits: Number(editForm.totalUnits), unitLabel: editForm.unitLabel || "쪽" }
+          : b
+      )
+    );
+    setEditingBook(false);
+  }
 
   const [scanOpen, setScanOpen] = useState(false);
   const [scanStatus, setScanStatus] = useState("");
@@ -457,20 +472,59 @@ export default function App() {
 
                 {selectedBook && (
                   <div style={{ background: "#FFFFFF", border: "1px solid #E5E1D8", borderRadius: 14, padding: 20 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ width: 10, height: 10, borderRadius: "50%", background: selectedBook.color.dot, display: "inline-block" }} />
-                          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selectedBook.title}</h2>
+                    {editingBook ? (
+                      <div style={{ marginBottom: 16 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, marginBottom: 10 }}>
+                          <input placeholder="문제집 이름" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} style={input} />
+                          <input placeholder="과목" value={editForm.subject} onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })} style={input} />
+                          <input placeholder="출판사" value={editForm.publisher} onChange={(e) => setEditForm({ ...editForm, publisher: e.target.value })} style={input} />
+                          <input placeholder="전체 분량" type="number" value={editForm.totalUnits} onChange={(e) => setEditForm({ ...editForm, totalUnits: e.target.value })} style={input} />
+                          <select value={editForm.unitLabel} onChange={(e) => setEditForm({ ...editForm, unitLabel: e.target.value })} style={input}>
+                            <option value="쪽">쪽</option>
+                            <option value="단원">단원</option>
+                            <option value="회차">회차</option>
+                            <option value="문제">문제</option>
+                          </select>
                         </div>
-                        <p style={{ fontSize: 13, color: "#9A9587", margin: "4px 0 0" }}>
-                          {selectedBook.subject}{selectedBook.publisher ? ` · ${selectedBook.publisher}` : ""}
-                        </p>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button onClick={saveEdit} style={btnPrimary}>저장</button>
+                          <button onClick={() => setEditingBook(false)} style={{ ...btnPrimary, background: "#8A8577" }}>취소</button>
+                        </div>
                       </div>
-                      <button onClick={() => deleteBook(selectedBook.id)} style={iconBtn} title="문제집 삭제">
-                        <Trash2 size={15} color="#B08579" />
-                      </button>
-                    </div>
+                    ) : (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ width: 10, height: 10, borderRadius: "50%", background: selectedBook.color.dot, display: "inline-block" }} />
+                            <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selectedBook.title}</h2>
+                          </div>
+                          <p style={{ fontSize: 13, color: "#9A9587", margin: "4px 0 0" }}>
+                            {selectedBook.subject}{selectedBook.publisher ? ` · ${selectedBook.publisher}` : ""}
+                          </p>
+                        </div>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          <button
+                            onClick={() => {
+                              setEditForm({
+                                title: selectedBook.title,
+                                subject: selectedBook.subject,
+                                publisher: selectedBook.publisher,
+                                totalUnits: String(selectedBook.totalUnits),
+                                unitLabel: selectedBook.unitLabel,
+                              });
+                              setEditingBook(true);
+                            }}
+                            style={iconBtn}
+                            title="정보 수정"
+                          >
+                            <Pencil size={15} color="#8A8577" />
+                          </button>
+                          <button onClick={() => deleteBook(selectedBook.id)} style={iconBtn} title="문제집 삭제">
+                            <Trash2 size={15} color="#B08579" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {(() => {
                       const done = progressFor(selectedBook.id, selectedBook.totalUnits);
