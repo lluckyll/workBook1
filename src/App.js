@@ -361,10 +361,21 @@ export default function App() {
                   </div>
                 </div>
 
+                <video
+                  ref={videoRef}
+                  muted
+                  playsInline
+                  style={{
+                    width: "100%",
+                    maxWidth: 320,
+                    borderRadius: 8,
+                    display: scanOpen ? "block" : "none",
+                    margin: scanOpen ? "0 auto 8px" : "0",
+                  }}
+                />
                 {scanOpen && (
                   <div style={{ background: "#F3F1EA", borderRadius: 10, padding: 12, marginBottom: 14 }}>
-                    <video ref={videoRef} muted playsInline style={{ width: "100%", maxWidth: 320, borderRadius: 8, display: "block", margin: "0 auto" }} />
-                    <p style={{ fontSize: 12, color: "#7A7568", textAlign: "center", margin: "8px 0 0" }}>{scanStatus || "카메라를 준비하는 중..."}</p>
+                    <p style={{ fontSize: 12, color: "#7A7568", textAlign: "center", margin: 0 }}>{scanStatus || "카메라를 준비하는 중..."}</p>
                     <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
                       <button onClick={closeScanner} style={iconBtn}><X size={14} /> 스캔 취소</button>
                     </div>
